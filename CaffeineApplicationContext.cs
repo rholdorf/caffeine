@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Reflection;
@@ -13,6 +14,7 @@ namespace Caffeine
 
         public CaffeineApplicationContext()
         {
+            Debug.WriteLine("Iniciando...");
             var icon = GetIcon("16h.png");
             _trayIcon = new NotifyIcon()
             {
@@ -29,6 +31,7 @@ namespace Caffeine
 
         void Exit(object sender, EventArgs e)
         {
+            Debug.WriteLine("Finalizando...");
             _cursorObserver.Stop();
             _trayIcon.Visible = false;
             Application.Exit();

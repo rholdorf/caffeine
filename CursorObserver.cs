@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Diagnostics;
+using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -32,15 +33,21 @@ namespace Caffeine
         private bool IsInSamePlaceForTooLong()
         {
             var currerntPosition = Cursor.Position;
-            if (_lastPosition.X == currerntPosition.X && _lastPosition.Y == currerntPosition.Y)
+            bool samePlace = _lastPosition.X == currerntPosition.X && _lastPosition.Y == currerntPosition.Y;
+            if (samePlace)
                 _samePositionCounter++;
+            else
+                _samePositionCounter = 0;
 
             _lastPosition = currerntPosition;
-            return _samePositionCounter > _limitSamePositionCounter;
+            var ret = _samePositionCounter > _limitSamePositionCounter;
+            Debug.WriteLine($"Mesmo lugar: {samePlace}, por muito tempo ({_samePositionCounter}/{_limitSamePositionCounter}): {ret}");
+            return ret;
         }
 
         private void MoveAround()
         {
+            Debug.WriteLine("Movendo cursor...");
             var position = Cursor.Position;
             for (int i = 0; i <= 5; i++)
             {
