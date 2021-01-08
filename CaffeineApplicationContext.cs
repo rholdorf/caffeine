@@ -10,7 +10,7 @@ namespace Caffeine
     public class CaffeineApplicationContext : ApplicationContext
     {
         private readonly NotifyIcon _trayIcon;
-        private readonly CursorObserver _cursorObserver = new CursorObserver();
+        private readonly IdleObserver _cursorObserver = new IdleObserver();
 
         public CaffeineApplicationContext()
         {
