@@ -10,7 +10,7 @@ namespace Caffeine
     public class CaffeineApplicationContext : ApplicationContext
     {
         private readonly NotifyIcon _trayIcon;
-        private readonly IdleObserver _cursorObserver = new IdleObserver();
+        private readonly IdleObserver _cursorObserver;
 
         public CaffeineApplicationContext()
         {
@@ -26,6 +26,7 @@ namespace Caffeine
                 Text = "Caffeine"
             };
 
+            _cursorObserver = new IdleObserver(_trayIcon);
             _cursorObserver.Start();
         }
 

@@ -14,6 +14,14 @@ namespace Caffeine
         private int _idleCheckCounter = 0;
         private readonly int _limitSamePositionCounter = 59;
         private readonly InputSimulator _inputSimulator = new InputSimulator();
+        private readonly NotifyIcon _trayIcon;
+        private const string OBSERVANDO = "Observando";
+        private const string SIMULANDO = "Simulando ação...";
+
+        public IdleObserver(NotifyIcon trayIcon)
+        {
+            _trayIcon = trayIcon;
+        }
 
         public void Start()
         {
@@ -22,20 +30,19 @@ namespace Caffeine
             _thread.Start();
         }
 
+        private void SetTrayToolTip(string value)
+        {
+            _trayIcon.Text = value;
+        }
+
         private void Observe()
         {
+            SetTrayToolTip(OBSERVANDO);
             while (_keepRunning)
             {
                 Thread.Sleep(1000);
-                //if (ScreenSaver.GetScreenSaverRunning())
-                //{
-                //    Debug.WriteLine("running, will kill");
-                //    ScreenSaver.KillScreenSaver();
-                //}
                 if (IsInSamePlaceForTooLong())
-                {
                     SimulateAction();
-                }
             }
         }
 
@@ -57,10 +64,12 @@ namespace Caffeine
         private void SimulateAction()
         {
             Debug.WriteLine("Simulando ação...");
+            SetTrayToolTip(SIMULANDO);
             _inputSimulator.Mouse.MoveMouseBy(3, 3);
             Thread.Sleep(10);
             _inputSimulator.Mouse.MoveMouseBy(-3, -3);
             _idleCheckCounter = 0;
+            SetTrayToolTip(OBSERVANDO);
         }
 
         public void Stop()
