@@ -1,5 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
 using WindowsInput;
@@ -17,6 +19,7 @@ namespace Caffeine
         private readonly NotifyIcon _trayIcon;
         private const string OBSERVANDO = "Observando";
         private const string SIMULANDO = "Simulando ação...";
+        private Random _random = new Random();
 
         public IdleObserver(NotifyIcon trayIcon)
         {
@@ -63,11 +66,14 @@ namespace Caffeine
 
         private void SimulateAction()
         {
+            var x = _random.Next(3, 7);
+            var y = _random.Next(3, 7);
+            var sleepMs = _random.Next(10, 100);
             Debug.WriteLine("Simulando ação...");
             SetTrayToolTip(SIMULANDO);
-            _inputSimulator.Mouse.MoveMouseBy(3, 3);
-            Thread.Sleep(10);
-            _inputSimulator.Mouse.MoveMouseBy(-3, -3);
+            _inputSimulator.Mouse.MoveMouseBy(x, y);
+            Thread.Sleep(sleepMs);
+            _inputSimulator.Mouse.MoveMouseBy(-x, -y);
             _idleCheckCounter = 0;
             SetTrayToolTip(OBSERVANDO);
         }
