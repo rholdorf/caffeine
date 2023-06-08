@@ -13,7 +13,16 @@ namespace Caffeine
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new CaffeineApplicationContext());
+            CaffeineApplicationContext app = null;
+            try
+            {
+                app = new CaffeineApplicationContext();
+                Application.Run(app);
+            }
+            finally
+            {
+                app?.Dispose();
+            }
         }
     }
 }

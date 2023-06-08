@@ -1,14 +1,16 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Diagnostics;
 using System.Drawing;
-using System.Runtime.InteropServices;
+using System.IO;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using WindowsInput;
 
 namespace Caffeine
 {
-    class IdleObserver
+    class IdleObserver : IDisposable
     {
         private Thread _thread;
         private bool _keepRunning;
@@ -17,13 +19,32 @@ namespace Caffeine
         private readonly int _limitSamePositionCounter = 59;
         private readonly InputSimulator _inputSimulator = new InputSimulator();
         private readonly NotifyIcon _trayIcon;
-        private const string OBSERVANDO = "Observando";
-        private const string SIMULANDO = "Simulando ação...";
+        private const string OBSERVANDO = "Observing";
+        private const string SIMULANDO = "Simulating action...";
         private Random _random = new Random();
+        private bool _systemAwake = true;
+        private bool _disposed;
 
         public IdleObserver(NotifyIcon trayIcon)
         {
+            SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
             _trayIcon = trayIcon;
+        }
+
+        private void SystemEvents_PowerModeChanged(object sender, PowerModeChangedEventArgs e)
+        {
+            switch(e.Mode)
+            {
+                case PowerModes.Resume:
+                    _systemAwake = true;
+                    Start();
+                    break;
+
+                case PowerModes.Suspend:
+                    _systemAwake = false;
+                    Stop();
+                    break;
+            }
         }
 
         public void Start()
@@ -40,12 +61,29 @@ namespace Caffeine
 
         private void Observe()
         {
-            SetTrayToolTip(OBSERVANDO);
-            while (_keepRunning)
+            try
             {
-                Thread.Sleep(1000);
-                if (IsInSamePlaceForTooLong())
-                    SimulateAction();
+                SetTrayToolTip(OBSERVANDO);
+                while (_keepRunning)
+                {
+                    Thread.Sleep(1000);
+                    if (IsInSamePlaceForTooLong())
+                        SimulateAction();
+                }
+            }
+            catch (Exception ex)
+            {
+                StringBuilder sb = new StringBuilder();
+                while (ex != null)
+                {
+                    sb.AppendLine(ex.GetType().ToString());
+                    sb.AppendLine(ex.Message);
+                    sb.AppendLine(ex.StackTrace);
+                    ex = ex.InnerException;
+                }
+                File.WriteAllText("exception.log", sb.ToString());
+
+                throw;
             }
         }
 
@@ -60,16 +98,19 @@ namespace Caffeine
 
             _lastPosition = currerntPosition;
             var ret = _idleCheckCounter > _limitSamePositionCounter;
-            Debug.WriteLine($"Mesmo lugar: {samePlace}, por muito tempo ({_idleCheckCounter}/{_limitSamePositionCounter}): {ret}");
+            Debug.WriteLine($"Same spot: {samePlace}, for too long ({_idleCheckCounter}/{_limitSamePositionCounter}): {ret}");
             return ret;
         }
 
         private void SimulateAction()
         {
+            if (!_systemAwake)
+                return;
+
             var x = _random.Next(3, 7);
             var y = _random.Next(3, 7);
             var sleepMs = _random.Next(10, 100);
-            Debug.WriteLine("Simulando ação...");
+            Debug.WriteLine(SIMULANDO);
             SetTrayToolTip(SIMULANDO);
             _inputSimulator.Mouse.MoveMouseBy(x, y);
             Thread.Sleep(sleepMs);
@@ -81,7 +122,30 @@ namespace Caffeine
         public void Stop()
         {
             _keepRunning = false;
-            _thread.Abort();
+            _thread?.Abort();
+            _thread = null;
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    // Because this is a static event, you must detach your event
+                    // handlers when your application is disposed, or memory leaks
+                    // will result.
+                    SystemEvents.PowerModeChanged -= SystemEvents_PowerModeChanged;
+                }
+
+                _disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }
