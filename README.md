@@ -24,8 +24,9 @@ Caffeine uses the InputSimulator library by Michael Noonan. More information abo
 
 ## License
 
-Caffeine is free software: you can redistribute it and/or modify it under the terms that you see fit. Please acknowledge the original source when doing so.
+Caffeine is free software: you can redistribute it and/or modify it under the terms that you see fit. No need to acknowledge the original source when doing so.
 
 ## Support
 
+It is just an app I needed for my work laptop.
 Although contributions are not currently needed, any feedback or issues can be reported to the project's GitHub page.
