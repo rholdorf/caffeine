@@ -76,13 +76,15 @@ namespace Caffeine
                 StringBuilder sb = new StringBuilder();
                 while (ex != null)
                 {
+                    sb.AppendLine(DateTime.Now.ToString("o"));
+                    sb.AppendLine($"System awake: {_systemAwake}");
                     sb.AppendLine(ex.GetType().ToString());
                     sb.AppendLine(ex.Message);
                     sb.AppendLine(ex.StackTrace);
                     ex = ex.InnerException;
                 }
-                File.WriteAllText("exception.log", sb.ToString());
 
+                File.AppendAllText("exception.log", sb.ToString());
                 throw;
             }
         }
@@ -110,11 +112,24 @@ namespace Caffeine
             var x = _random.Next(3, 7);
             var y = _random.Next(3, 7);
             var sleepMs = _random.Next(10, 100);
-            Debug.WriteLine(SIMULANDO);
-            SetTrayToolTip(SIMULANDO);
-            _inputSimulator.Mouse.MoveMouseBy(x, y);
-            Thread.Sleep(sleepMs);
-            _inputSimulator.Mouse.MoveMouseBy(-x, -y);
+
+            try
+            {
+                Debug.WriteLine(SIMULANDO);
+                SetTrayToolTip(SIMULANDO);
+                _inputSimulator.Mouse.MoveMouseBy(x, y);
+                Thread.Sleep(sleepMs);
+                _inputSimulator.Mouse.MoveMouseBy(-x, -y);
+            }
+            catch(Exception ex)
+            {
+                // skip lib error
+                if (ex.Message.Contains("Some simulated input commands were not sent successfully."))
+                    Debug.WriteLine(ex.Message);
+                else
+                    throw;
+            }
+
             _idleCheckCounter = 0;
             SetTrayToolTip(OBSERVANDO);
         }
