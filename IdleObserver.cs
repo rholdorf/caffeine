@@ -73,20 +73,28 @@ namespace Caffeine
             }
             catch (Exception ex)
             {
-                StringBuilder sb = new StringBuilder();
-                while (ex != null)
-                {
-                    sb.AppendLine(DateTime.Now.ToString("o"));
-                    sb.AppendLine($"System awake: {_systemAwake}");
-                    sb.AppendLine(ex.GetType().ToString());
-                    sb.AppendLine(ex.Message);
-                    sb.AppendLine(ex.StackTrace);
-                    ex = ex.InnerException;
-                }
-
-                File.AppendAllText("exception.log", sb.ToString());
+                LogErr(ex);
                 throw;
             }
+        }
+
+        private void LogErr(Exception ex, string message = null)
+        {
+            StringBuilder sb = new StringBuilder();
+            if(message!= null)
+                sb.AppendLine(message);
+
+            while (ex != null)
+            {
+                sb.AppendLine(DateTime.Now.ToString("o"));
+                sb.AppendLine($"System awake: {_systemAwake}");
+                sb.AppendLine(ex.GetType().ToString());
+                sb.AppendLine(ex.Message);
+                sb.AppendLine(ex.StackTrace);
+                ex = ex.InnerException;
+            }
+
+            File.AppendAllText("exception.log", sb.ToString());
         }
 
         private bool IsInSamePlaceForTooLong()
@@ -111,7 +119,7 @@ namespace Caffeine
 
             var x = _random.Next(3, 7);
             var y = _random.Next(3, 7);
-            var sleepMs = _random.Next(10, 100);
+            var sleepMs = _random.Next(50, 100);
 
             try
             {
@@ -125,7 +133,7 @@ namespace Caffeine
             {
                 // skip lib error
                 if (ex.Message.Contains("Some simulated input commands were not sent successfully."))
-                    Debug.WriteLine(ex.Message);
+                    LogErr(ex, $"x:{x} y:{y}");
                 else
                     throw;
             }
