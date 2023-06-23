@@ -18,10 +18,6 @@ dotnet build -c Release
 
 Once these steps are completed, Caffeine will automatically start when your machine boots.
 
-## Dependencies
-
-Caffeine uses the InputSimulator library by Michael Noonan. More information about this library can be found [here](https://github.com/michaelnoonan/inputsimulator).
-
 ## License
 
 Caffeine is free software: you can redistribute it and/or modify it under the terms that you see fit. No need to acknowledge the original source when doing so.
