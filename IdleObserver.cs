@@ -3,10 +3,10 @@ using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
-using WindowsInput;
 
 namespace Caffeine
 {
@@ -16,8 +16,7 @@ namespace Caffeine
         private bool _keepRunning;
         private Point _lastPosition = new Point(0, 0);
         private int _idleCheckCounter = 0;
-        private readonly int _limitSamePositionCounter = 59;
-        private readonly InputSimulator _inputSimulator = new InputSimulator();
+        private readonly int _limitSamePositionCounter = 20;
         private readonly NotifyIcon _trayIcon;
         private const string OBSERVANDO = "Observing";
         private const string SIMULANDO = "Simulating action...";
@@ -66,7 +65,7 @@ namespace Caffeine
                 SetTrayToolTip(OBSERVANDO);
                 while (_keepRunning)
                 {
-                    Thread.Sleep(1000);
+                    Thread.Sleep(5000);
                     if (IsInSamePlaceForTooLong())
                         SimulateAction();
                 }
@@ -78,7 +77,7 @@ namespace Caffeine
             }
         }
 
-        private void LogErr(Exception ex, string message = null)
+        private void LogErr(Exception ex = null, string message = null)
         {
             StringBuilder sb = new StringBuilder();
             if(message!= null)
@@ -94,6 +93,10 @@ namespace Caffeine
                 ex = ex.InnerException;
             }
 
+            if (sb.Length == 0)
+                return;
+
+            Debug.WriteLine(sb.ToString());
             File.AppendAllText("exception.log", sb.ToString());
         }
 
@@ -117,29 +120,44 @@ namespace Caffeine
             if (!_systemAwake)
                 return;
 
-            var x = _random.Next(3, 7);
-            var y = _random.Next(3, 7);
-            var sleepMs = _random.Next(50, 100);
+            var x = _random.Next(-7, 7);
+            var y = _random.Next(-7, 7);
+            var sleepMs = _random.Next(150, 300);
 
             try
             {
                 Debug.WriteLine(SIMULANDO);
                 SetTrayToolTip(SIMULANDO);
-                _inputSimulator.Mouse.MoveMouseBy(x, y);
+                Send(x, y);
                 Thread.Sleep(sleepMs);
-                _inputSimulator.Mouse.MoveMouseBy(-x, -y);
+                Send(-x, -y);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                // skip lib error
-                if (ex.Message.Contains("Some simulated input commands were not sent successfully."))
-                    LogErr(ex, $"x:{x} y:{y}");
-                else
-                    throw;
+                LogErr(ex, $"x:{x} y:{y}");
+                throw;
             }
 
             _idleCheckCounter = 0;
             SetTrayToolTip(OBSERVANDO);
+        }
+
+        private void Send(int x, int y)
+        {
+            var movement = new INPUT { Type = 0 /* mouse */ };
+            movement.Data.Mouse.Flags = 1 /* move */;
+            movement.Data.Mouse.X = x;
+            movement.Data.Mouse.Y = y;
+            var movementArray = new INPUT[] { movement };
+
+            var result = NativeMethods.SendInput((UInt32)movementArray.Length, movementArray, Marshal.SizeOf(typeof(INPUT)));
+            if (result != movementArray.Length)
+            {
+                var lastError = NativeMethods.GetLastError();
+                LogErr(null, $"x:{x} y:{y} result:{result} lastError:{lastError}");
+            }
+
+            Debug.WriteLine($"x:{x} y:{y} result:{result}");
         }
 
         public void Stop()
