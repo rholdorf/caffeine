@@ -14,13 +14,12 @@ namespace Caffeine
 
         public CaffeineApplicationContext()
         {
-            Debug.WriteLine("Iniciando...");
             var icon = GetIcon("16h.png");
             _trayIcon = new NotifyIcon()
             {
                 Icon = icon,
                 ContextMenu = new ContextMenu(new MenuItem[] {
-                new MenuItem("Sair", Exit)
+                new MenuItem("Exit", Exit)
             }),
                 Visible = true,
                 Text = "Caffeine"
@@ -32,7 +31,6 @@ namespace Caffeine
 
         void Exit(object sender, EventArgs e)
         {
-            Debug.WriteLine("Finalizando...");
             _cursorObserver.Stop();
             _trayIcon.Visible = false;
             Application.Exit();
